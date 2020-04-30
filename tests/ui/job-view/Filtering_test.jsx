@@ -152,7 +152,7 @@ describe('Filtering', () => {
 
     test('should have 10 failures', async () => {
       const { getAllByText, getByTitle, findAllByText } = render(<App />);
-      await waitForElement(() => findAllByText('B'));
+      await findAllByText('B');
       const unclassifiedOnlyButton = getByTitle(
         'Loaded failures / toggle filtering for unclassified failures',
       );
@@ -216,7 +216,7 @@ describe('Filtering', () => {
 
     test('string "yaml" should have 10 jobs', async () => {
       const { getAllByText, findAllByText } = render(<App />);
-      await waitForElement(() => findAllByText('B'));
+      await findAllByText('B');
       const filterField = document.querySelector('#quick-filter');
       setFilterText(filterField, 'yaml');
 
@@ -230,15 +230,10 @@ describe('Filtering', () => {
     });
 
     test('click signature should have 10 jobs', async () => {
-      const { getByTitle, findAllByText, findByText } = render(<App />);
+      const { getByTitle, findAllByText } = render(<App />);
       const build = await findAllByText('B');
 
       fireEvent.mouseDown(build[0]);
-
-      const sigLink = await findByText('(sig)', { timeout: 4999 });
-      expect(sigLink.getAttribute('href')).toBe(
-        '/#/jobs?repo=autoland&selectedTaskRun=JFVlnwufR7G9tZu_pKM0dQ-0&searchStr=2aa083621bb989d6acf1151667288d5fe9616178',
-      );
 
       const keywordLink = await waitForElement(() =>
         getByTitle('Filter jobs containing these keywords'),
@@ -256,7 +251,7 @@ describe('Filtering', () => {
 
     test('uncheck success should leave 30 jobs', async () => {
       const { getAllByText, findAllByText } = render(<App />);
-      await waitForElement(() => findAllByText('B'));
+      await findAllByText('B');
       clickFilterChicklet('green');
 
       await waitForElementToBeRemoved(() => getAllByText('D'));
@@ -271,7 +266,7 @@ describe('Filtering', () => {
     test('uncheck failures should leave 20 jobs', async () => {
       const { getAllByText, findAllByText } = render(<App />);
       const symbolToRemove = 'B';
-      await waitForElement(() => findAllByText(symbolToRemove));
+      await findAllByText(symbolToRemove);
       clickFilterChicklet('red');
 
       await waitForElementToBeRemoved(() => getAllByText(symbolToRemove));
@@ -286,7 +281,7 @@ describe('Filtering', () => {
     test('uncheck in progress should leave 20 jobs', async () => {
       const { getAllByText, findAllByText } = render(<App />);
       const symbolToRemove = 'yaml';
-      await waitForElement(() => findAllByText('B'));
+      await findAllByText('B');
       clickFilterChicklet('dkgray');
 
       await waitForElementToBeRemoved(() => getAllByText(symbolToRemove));
@@ -301,7 +296,7 @@ describe('Filtering', () => {
     test('Filters | Reset should get back to original set of jobs', async () => {
       const { getAllByText, findAllByText, findByText } = render(<App />);
       const symbolToRemove = 'yaml';
-      await waitForElement(() => findAllByText('B'));
+      await findAllByText('B');
       clickFilterChicklet('dkgray');
 
       await waitForElementToBeRemoved(() => getAllByText(symbolToRemove));
@@ -311,7 +306,7 @@ describe('Filtering', () => {
       const filtersMenu = await findByText('Filters');
       fireEvent.click(filtersMenu);
 
-      const resetMenuItem = await waitForElement(() => findByText('Reset'));
+      const resetMenuItem = await findByText('Reset');
       fireEvent.click(resetMenuItem);
 
       await waitForElement(() => getAllByText(symbolToRemove));

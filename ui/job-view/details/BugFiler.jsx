@@ -126,16 +126,28 @@ export class BugFilerClass extends React.Component {
         ),
     );
     const thisFailure = allFailures.map(f => f.join(' | ')).join('\n');
-    const crash = suggestion.search.match(crashRegex);
-    const crashSignatures = crash
-      ? [crash[0].split('application crashed ')[1]]
-      : [];
-    const parsedSummary = parseSummary(suggestion);
 
+    const parsedSummary = parseSummary(suggestion);
     let summaryString = parsedSummary[0].join(' | ');
     if (jobGroupName.toLowerCase().includes('reftest')) {
       const re = /layout\/reftests\//gi;
       summaryString = summaryString.replace(re, '');
+    }
+
+    const crash = suggestion.search.match(crashRegex);
+    const crashSignatures = crash
+      ? [crash[0].split('application crashed ')[1]]
+      : [];
+
+    const keywords = [];
+    const isAssertion = [
+      /ASSERTION:/, // binary code
+      /assertion fail/i, // JavaScript
+      /assertion count \d+ is \w+ than expected \d+ assertion/, // layout
+      /AssertionError/, // Marionette
+    ].some(regexp => regexp.test(summaryString));
+    if (isAssertion) {
+      keywords.push('assertion');
     }
 
     const checkedLogLinks = new Map([
@@ -160,6 +172,7 @@ export class BugFilerClass extends React.Component {
       parsedSummary,
       checkedLogLinks,
       thisFailure,
+      keywords,
       crashSignatures,
     };
   }
@@ -372,9 +385,9 @@ export class BugFilerClass extends React.Component {
       comment,
       isIntermittent,
       checkedLogLinks,
-      blocks,
-      dependsOn,
+      regressedBy,
       seeAlso,
+      keywords,
       crashSignatures,
     } = this.state;
     const { toggle, successCallback, notify } = this.props;
@@ -409,7 +422,9 @@ export class BugFilerClass extends React.Component {
     // Join that with the comment separated with a hard rule.
     const descriptionStrings = `${logLinks}\n\n---\n\n${comment}`;
 
-    const keywords = isIntermittent ? ['intermittent-failure'] : [];
+    if (isIntermittent) {
+      keywords.push('intermittent-failure');
+    }
     let priority = 'P5';
     const crashSignature = crashSignatures.join('\n');
 
@@ -417,6 +432,11 @@ export class BugFilerClass extends React.Component {
       keywords.push('crash');
       // Set no priority for crashes to get them included in triage meetings.
       priority = '--';
+    }
+
+    // Use of 'Regressed By' field shall add 'regression' to keywords.
+    if (regressedBy) {
+      keywords.push('regression');
     }
 
     /* Intermittent bugs in the Core :: DOM: Security component need to have the
@@ -461,8 +481,7 @@ export class BugFilerClass extends React.Component {
           keywords,
           whiteboard,
           version: version.name,
-          blocks,
-          depends_on: dependsOn,
+          regressed_by: regressedBy,
           see_also: seeAlso,
           crash_signature: crashSignature,
           severity: 'normal',
@@ -774,35 +793,19 @@ export class BugFilerClass extends React.Component {
                 </div>
                 <div className="d-inline-flex ml-2">
                   <Input
-                    id="blocksInput"
-                    type="text"
-                    onChange={evt =>
-                      this.setState({ blocks: evt.target.value })
-                    }
-                    placeholder="Blocks"
-                  />
-                  <Tooltip
-                    target="blocksInput"
-                    placement="bottom"
-                    isOpen={tooltipOpen.blocksInput}
-                    toggle={() => this.toggleTooltip('blocksInput')}
-                  >
-                    Comma-separated list of bugs
-                  </Tooltip>
-                  <Input
-                    id="dependsOn"
+                    id="regressedBy"
                     type="text"
                     className="ml-1"
                     onChange={evt =>
-                      this.setState({ dependsOn: evt.target.value })
+                      this.setState({ regressedBy: evt.target.value })
                     }
-                    placeholder="Depends on"
+                    placeholder="Regressed by"
                   />
                   <Tooltip
-                    target="dependsOn"
+                    target="regressedBy"
                     placement="bottom"
-                    isOpen={tooltipOpen.dependsOn}
-                    toggle={() => this.toggleTooltip('dependsOn')}
+                    isOpen={tooltipOpen.regressedBy}
+                    toggle={() => this.toggleTooltip('regressedBy')}
                   >
                     Comma-separated list of bugs
                   </Tooltip>
