@@ -4,8 +4,8 @@ import {
   render,
   cleanup,
   fireEvent,
-  waitForElement,
-  waitForElementToBeRemoved,
+  waitFor,
+  waitForToBeRemoved,
 } from '@testing-library/react';
 
 import App from '../../../ui/job-view/App';
@@ -118,18 +118,16 @@ describe('Filtering', () => {
     test('should have 1 push', async () => {
       const { getAllByText, getAllByTestId, getByTestId } = render(<App />);
       // wait till the ``reviewbot`` authored push is shown before filtering.
-      await waitForElement(() => getAllByText('reviewbot'));
+      await waitFor(() => getAllByText('reviewbot'));
       setUrlParam('author', 'reviewbot');
-      await waitForElementToBeRemoved(() => getByTestId('push-511138'));
+      await waitForToBeRemoved(() => getByTestId('push-511138'));
 
-      const filteredPushes = await waitForElement(() =>
-        getAllByTestId('push-header'),
-      );
+      const filteredPushes = await waitFor(() => getAllByTestId('push-header'));
       expect(filteredPushes).toHaveLength(1);
 
       setUrlParam('author', null);
-      await waitForElement(() => getAllByText('jarilvalenciano@gmail.com'));
-      const unFilteredPushes = await waitForElement(() =>
+      await waitFor(() => getAllByText('jarilvalenciano@gmail.com'));
+      const unFilteredPushes = await waitFor(() =>
         getAllByTestId('push-header'),
       );
       expect(unFilteredPushes).toHaveLength(10);
@@ -161,7 +159,7 @@ describe('Filtering', () => {
       // Since yaml is not an unclassified failure, making this call will
       // ensure that the filtering has completed. Then we can get an accurate
       // count of what's left.
-      await waitForElementToBeRemoved(() => getAllByText('yaml'));
+      await waitForToBeRemoved(() => getAllByText('yaml'));
 
       // The api returns the same joblist for each push.
       // 10 pushes with 2 failures each, but only 1 unclassified.
@@ -169,7 +167,7 @@ describe('Filtering', () => {
 
       // undo the filtering and make sure we see all the jobs again
       fireEvent.click(unclassifiedOnlyButton);
-      await waitForElement(() => getAllByText('yaml'));
+      await waitFor(() => getAllByText('yaml'));
       expect(jobCount()).toBe(40);
     });
   });
@@ -220,12 +218,12 @@ describe('Filtering', () => {
       const filterField = document.querySelector('#quick-filter');
       setFilterText(filterField, 'yaml');
 
-      await waitForElementToBeRemoved(() => getAllByText('B'));
+      await waitForToBeRemoved(() => getAllByText('B'));
       expect(jobCount()).toBe(10);
 
       // undo the filtering and make sure we see all the jobs again
       setFilterText(filterField, null);
-      await waitForElement(() => getAllByText('B'));
+      await waitFor(() => getAllByText('B'));
       expect(jobCount()).toBe(40);
     });
 
@@ -235,7 +233,7 @@ describe('Filtering', () => {
 
       fireEvent.mouseDown(build[0]);
 
-      const keywordLink = await waitForElement(() =>
+      const keywordLink = await waitFor(() =>
         getByTitle('Filter jobs containing these keywords'),
       );
       expect(keywordLink.getAttribute('href')).toBe(
@@ -254,12 +252,12 @@ describe('Filtering', () => {
       await findAllByText('B');
       clickFilterChicklet('green');
 
-      await waitForElementToBeRemoved(() => getAllByText('D'));
+      await waitForToBeRemoved(() => getAllByText('D'));
       expect(jobCount()).toBe(30);
 
       // undo the filtering and make sure we see all the jobs again
       clickFilterChicklet('green');
-      await waitForElement(() => getAllByText('D'));
+      await waitFor(() => getAllByText('D'));
       expect(jobCount()).toBe(40);
     });
 
@@ -269,12 +267,12 @@ describe('Filtering', () => {
       await findAllByText(symbolToRemove);
       clickFilterChicklet('red');
 
-      await waitForElementToBeRemoved(() => getAllByText(symbolToRemove));
+      await waitForToBeRemoved(() => getAllByText(symbolToRemove));
       expect(jobCount()).toBe(20);
 
       // undo the filtering and make sure we see all the jobs again
       clickFilterChicklet('red');
-      await waitForElement(() => getAllByText(symbolToRemove));
+      await waitFor(() => getAllByText(symbolToRemove));
       expect(jobCount()).toBe(40);
     });
 
@@ -284,12 +282,12 @@ describe('Filtering', () => {
       await findAllByText('B');
       clickFilterChicklet('dkgray');
 
-      await waitForElementToBeRemoved(() => getAllByText(symbolToRemove));
+      await waitForToBeRemoved(() => getAllByText(symbolToRemove));
       expect(jobCount()).toBe(30);
 
       // undo the filtering and make sure we see all the jobs again
       clickFilterChicklet('dkgray');
-      await waitForElement(() => getAllByText(symbolToRemove));
+      await waitFor(() => getAllByText(symbolToRemove));
       expect(jobCount()).toBe(40);
     });
 
@@ -299,7 +297,7 @@ describe('Filtering', () => {
       await findAllByText('B');
       clickFilterChicklet('dkgray');
 
-      await waitForElementToBeRemoved(() => getAllByText(symbolToRemove));
+      await waitForToBeRemoved(() => getAllByText(symbolToRemove));
       expect(jobCount()).toBe(30);
 
       // undo the filtering with the "Filters | Reset" menu item
@@ -309,7 +307,7 @@ describe('Filtering', () => {
       const resetMenuItem = await findByText('Reset');
       fireEvent.click(resetMenuItem);
 
-      await waitForElement(() => getAllByText(symbolToRemove));
+      await waitFor(() => getAllByText(symbolToRemove));
       expect(jobCount()).toBe(40);
     });
   });
